@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4019.2">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
   <POU Name="FB_Matrix" Id="{f293906e-c654-4c24-8fbc-10dfeca55611}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Matrix
 VAR_INPUT
@@ -12,29 +12,127 @@ END_VAR
     <Implementation>
       <ST><![CDATA[]]></ST>
     </Implementation>
-    <Method Name="Multiplication" Id="{0bd670ac-7b4b-43b0-86ad-69f18a815d16}">
-      <Declaration><![CDATA[METHOD PUBLIC Multiplication : BOOL
+    <Method Name="MatrixScale" Id="{d39c9cce-7be7-4476-8fe5-f1d1dafae051}">
+      <Declaration><![CDATA[METHOD PUBLIC MatrixScale : BOOL
 VAR_IN_OUT
-	arrayA 			: ARRAY[*, *] OF DINT;
-	arrayB 			: ARRAY[*, *] OF DINT;
-	arrayX 			: ARRAY[*, *] OF DINT;	
+	matrixA	: ARRAY[*,*] OF LREAL;
+END_VAR
+VAR_INPUT
+	fScale	: LREAL;
 END_VAR
 VAR
-	nIndex1, nIndex2, nIndex3, nIndex4	: DINT;
+	iIndex1, iIndex2	: DINT; 
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Function scales an arbitrary sized matrix by the scalar scaling factor fScale. 
+FOR iIndex1 :=LOWER_BOUND(matrixA,1) TO UPPER_BOUND(matrixA,1) BY 1 DO 
+	FOR iIndex2 :=LOWER_BOUND(matrixA,2) TO UPPER_BOUND(matrixA,2) BY 1 DO 
+		matrixA[iIndex1,iIndex2] := matrixA[iIndex1,iIndex2] * fScale;
+	END_FOR
+END_FOR]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MatrixTransform" Id="{05568e44-2df5-4dea-b2f7-594e2f5e2c1d}">
+      <Declaration><![CDATA[METHOD PUBLIC MatrixTransform : BOOL
+VAR_IN_OUT
+	matrixA 			: ARRAY[*, *] 	OF LREAL;
+	vectorIn 			: ARRAY[*] 		OF LREAL;
+	vectorOut 			: ARRAY[*] 		OF LREAL;	
+END_VAR
+VAR
+	dimA1, dimA2, dimVectorIn, dimVectorOut	: DINT;
+	nIndex1, nIndex2	: DINT;
+	fCurrMult			: LREAL;
 END_VAR;
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[FOR nIndex1 := LOWER_BOUND(arrayA, 1) TO UPPER_BOUND(arrayA, 1) DO
-	FOR nIndex2 := LOWER_BOUND(arrayB, 2) TO UPPER_BOUND(arrayB, 2) DO
-		nIndex4 := 0;
-		FOR nIndex3 := LOWER_BOUND(arrayA, 2) TO UPPER_BOUND(arrayA, 2) DO
-			nIndex4 := nIndex4 + arrayA[nIndex1, nIndex3] * arrayB[nIndex3, nIndex2];
+        <ST><![CDATA[// Function transforms an arbitrary sized vector by using the transform matrix matrixA, returns true if successful and false if the dimensions mismatch
+
+// Get the dimensions of the matrix and input /  output vectors (useful for debugging if things go wrong) 
+dimA1	:= UPPER_BOUND(matrixA,1);
+dimA2	:= UPPER_BOUND(matrixA,2);
+
+dimVectorIn		:= UPPER_BOUND(vectorIn,1);
+dimVectorOut	:= UPPER_BOUND(vectorOut,1);
+
+// Check that the dimensions are correct ( matrix dim 2 must be equal to vector dim) 
+IF(UPPER_BOUND(matrixA,2) = UPPER_BOUND(vectorIn,1))THEN
+	
+	FOR nIndex1 := LOWER_BOUND(matrixA,1) TO UPPER_BOUND(matrixA, 1) DO
+		fCurrMult	:= 0;
+		FOR nIndex2 := LOWER_BOUND(vectorIn, 1) TO UPPER_BOUND(vectorIn, 1) DO
+			fCurrMult := fCurrMult + ( matrixA[nIndex1, nIndex2] * vectorIn[nIndex2] );
+			vectorOut[nIndex1] := fCurrMult;
 		END_FOR;
-		arrayX[nIndex1, nIndex2] := nIndex4;
+	END_FOR;
+	
+	
+	MatrixTransform	:= TRUE;	// Return true for success 
+ELSE
+	MatrixTransform	:= FALSE;	// Return false for failure
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Multiplication" Id="{0bd670ac-7b4b-43b0-86ad-69f18a815d16}">
+      <Declaration><![CDATA[METHOD PUBLIC Multiplication : BOOL
+VAR_IN_OUT
+	arrayA 			: ARRAY[*, *] OF LREAL;
+	arrayB 			: ARRAY[*, *] OF LREAL;
+	arrayX 			: ARRAY[*, *] OF LREAL;	
+END_VAR
+VAR
+	nIndex1, nIndex2, nIndex3	: DINT;
+	currVal	: LREAL;
+END_VAR;
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Function multiplies 2 matrices 
+FOR nIndex1 := LOWER_BOUND(arrayA, 1) TO UPPER_BOUND(arrayA, 1) DO
+	FOR nIndex2 := LOWER_BOUND(arrayB, 2) TO UPPER_BOUND(arrayB, 2) DO
+		currVal := 0;
+		FOR nIndex3 := LOWER_BOUND(arrayA, 2) TO UPPER_BOUND(arrayA, 2) DO
+			currVal := currVal + arrayA[nIndex1, nIndex3] * arrayB[nIndex3, nIndex2];
+		END_FOR;
+		arrayX[nIndex1, nIndex2] := currVal;
 	END_FOR;
 END_FOR;
 ]]></ST>
       </Implementation>
     </Method>
+    <LineIds Name="FB_Matrix">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Matrix.MatrixScale">
+      <LineId Id="25" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Matrix.MatrixTransform">
+      <LineId Id="100" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="68" Count="4" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="9" Count="2" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="36" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_Matrix.Multiplication">
+      <LineId Id="22" Count="0" />
+      <LineId Id="3" Count="8" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4019.2">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.3">
   <POU Name="MAIN" Id="{a9728c1a-d162-4a51-9046-0a602928b807}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
@@ -14,11 +14,18 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[fbMatrix.Multiplication(arrayA1, arrayB1, arrayX1);
+      <ST><![CDATA[
+
+fbMatrix.Multiplication(arrayA1, arrayB1, arrayX1);
 
 fbMatrix.Multiplication(arrayA2, arrayB2, arrayX2);
 
 ]]></ST>
     </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="18" Count="1" />
+      <LineId Id="3" Count="3" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>
